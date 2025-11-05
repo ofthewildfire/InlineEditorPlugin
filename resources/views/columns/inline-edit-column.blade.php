@@ -91,7 +91,7 @@
                         // Show error notification
                         window.FilamentNotifications && window.FilamentNotifications.notify({
                             title: 'Failed to save',
-                            body: 'Please try again or check the console for details',
+                            body: 'Please try again',
                             status: 'danger',
                             duration: 4000
                         });
