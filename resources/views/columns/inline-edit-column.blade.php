@@ -29,7 +29,7 @@
     class="inline-edit-column"
 >
     <div 
-        x-show="!isEditing && !saving" 
+        x-show="!isEditing" 
         @click="isEditing = true; $nextTick(() => $refs.input?.focus())"
         class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors"
         :title="'Click to edit'"
@@ -38,21 +38,6 @@
         <svg class="inline-block w-3 h-3 ml-1 opacity-30 hover:opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
-    </div>
-    
-    <div 
-        x-show="saving" 
-        x-cloak
-        class="px-2 py-1 flex items-center space-x-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
-    >
-        <span x-text="state || '—'" class="font-medium"></span>
-        <div class="flex items-center space-x-1">
-            <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-xs font-medium">Saving</span>
-        </div>
     </div>
     
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
@@ -145,6 +130,25 @@
                 </svg>
             </button>
         </div>
+    </div>
+    
+    <!-- Floating Saving Notification -->
+    <div 
+        x-show="saving" 
+        x-cloak
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-x-full"
+        x-transition:enter-end="opacity-100 transform translate-x-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-x-0"
+        x-transition:leave-end="opacity-0 transform translate-x-full"
+        class="fixed top-4 right-4 z-50 px-4 py-3 flex items-center space-x-3 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-blue-200 dark:border-blue-800"
+    >
+        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm font-medium">Saving changes...</span>
     </div>
 </div>
 
