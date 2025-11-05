@@ -22,6 +22,10 @@
             }
         }
     }"
+        x-init="() => {
+            // ensure timeouts are cleared when the page unloads
+            window.addEventListener('beforeunload', () => { if (timeoutId) { clearTimeout(timeoutId); } });
+        }"
     class="inline-edit-column"
 >
     <div 
@@ -36,13 +40,19 @@
         </svg>
     </div>
     
-    <!-- Saving State - Just show the normal value, no ugly text -->
     <div 
         x-show="saving" 
         x-cloak
-        class="px-2 py-1 text-gray-900 dark:text-gray-100"
+        class="px-2 py-1 flex items-center space-x-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
     >
-        <span x-text="state || '—'"></span>
+        <span x-text="state || '—'" class="font-medium"></span>
+        <div class="flex items-center space-x-1">
+            <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs font-medium">Saving</span>
+        </div>
     </div>
     
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
@@ -163,6 +173,15 @@
     .inline-edit-column input:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+    
+    .inline-edit-column .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
     
 </style>
