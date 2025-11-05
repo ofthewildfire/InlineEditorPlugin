@@ -5,14 +5,27 @@
     $type = $getType();
 @endphp
 
-<div 
-    x-data="{ 
+    <div 
+        x-data="{ 
         isEditing: false, 
         state: @js($state), 
         originalState: @js($state),
         errors: null,
-        saving: false
+        saving: false,
+        // id for the auto-hide timeout so we can clear it between sessions
+        timeoutId: null,
+        // clear any pending timeout helper
+        clearErrorTimeout() {
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
+        }
     }"
+        x-init="() => {
+            // ensure timeouts are cleared when the page unloads
+            window.addEventListener('beforeunload', () => { if (timeoutId) { clearTimeout(timeoutId); } });
+        }"
     class="inline-edit-column"
 >
     <div 
@@ -27,17 +40,14 @@
         </svg>
     </div>
     
-    <!-- Loading State -->
+    <!-- Saving State - Just show the value with subtle indication -->
     <div 
         x-show="saving" 
         x-cloak
-        class="flex items-center px-2 py-1 text-sm text-blue-600 dark:text-blue-400"
+        class="px-2 py-1 text-gray-500 dark:text-gray-400 italic"
     >
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Saving...</span>
+        <span x-text="state || '—'"></span>
+        <span class="text-xs ml-1">(saving...)</span>
     </div>
     
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
@@ -49,29 +59,54 @@
             @keydown.enter="
                 if (saving) return; // Prevent double-save
                 saving = true;
-                errors = null;
+                clearErrorTimeout(); errors = null;
+                
+                // Show Filament notification
+                window.FilamentNotifications && window.FilamentNotifications.notify({
+                    title: 'Saving...',
+                    status: 'info',
+                    duration: 1500
+                });
+                
                 $wire.updateTableColumnState(@js($name), @js($recordKey), state)
                     .then(() => {
+                        // clear any pending hide timeout when we succeed
+                        clearErrorTimeout();
                         originalState = state;
                         isEditing = false;
                         saving = false;
-                        // Show brief success feedback
-                        $wire.$refresh();
+                        
+                        // Show success notification
+                        window.FilamentNotifications && window.FilamentNotifications.notify({
+                            title: 'Saved successfully',
+                            status: 'success',
+                            duration: 2000
+                        });
                     })
                     .catch((error) => {
                         console.error('Save error:', error);
                         errors = error.response?.data?.errors || error.message || ['Update failed'];
                         saving = false;
-                        // Auto-hide errors after 5 seconds
-                        setTimeout(() => { errors = null; }, 5000);
+                        
+                        // Show error notification
+                        window.FilamentNotifications && window.FilamentNotifications.notify({
+                            title: 'Failed to save',
+                            body: 'Please try again or check the console for details',
+                            status: 'danger',
+                            duration: 4000
+                        });
+                        
+                        // Auto-hide inline errors after 5 seconds (store id and clear any previous)
+                        clearErrorTimeout();
+                        timeoutId = setTimeout(() => { errors = null; timeoutId = null; }, 5000);
                     })
             "
-            @keydown.escape="state = originalState; isEditing = false; errors = null"
+            @keydown.escape="state = originalState; isEditing = false; clearErrorTimeout(); errors = null"
             @blur="
                 if (!saving) {
                     state = originalState; 
                     isEditing = false; 
-                    errors = null;
+                    clearErrorTimeout(); errors = null;
                 }
             "
             :placeholder="saving ? 'Saving...' : 'Press Enter to save, Escape to cancel'"
@@ -79,7 +114,7 @@
         />
         
         <button 
-            @click="state = originalState; isEditing = false; errors = null"
+            @click="state = originalState; isEditing = false; clearErrorTimeout(); errors = null"
             class="text-red-600 hover:text-red-800"
             title="Cancel (Escape)"
             :disabled="saving"
@@ -99,7 +134,7 @@
                     <div x-text="error"></div>
                 </template>
             </div>
-            <button @click="errors = null" class="ml-2 text-red-400 hover:text-red-600" title="Dismiss">
+            <button @click="clearErrorTimeout(); errors = null" class="ml-2 text-red-400 hover:text-red-600" title="Dismiss">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -135,12 +170,4 @@
         cursor: not-allowed;
     }
     
-    .inline-edit-column .animate-spin {
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
 </style>
