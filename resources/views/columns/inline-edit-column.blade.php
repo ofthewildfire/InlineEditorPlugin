@@ -16,7 +16,7 @@
     class="inline-edit-column"
 >
     <div 
-        x-show="!isEditing" 
+        x-show="!isEditing && !saving" 
         @click="isEditing = true; $nextTick(() => $refs.input?.focus())"
         class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors"
         :title="'Click to edit'"
@@ -27,6 +27,19 @@
         </svg>
     </div>
     
+    <!-- Loading State -->
+    <div 
+        x-show="saving" 
+        x-cloak
+        class="flex items-center px-2 py-1 text-sm text-blue-600 dark:text-blue-400"
+    >
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Saving...</span>
+    </div>
+    
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
         <input 
             x-ref="input"
@@ -34,6 +47,7 @@
             :type="@js($type)"
             class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             @keydown.enter="
+                if (saving) return; // Prevent double-save
                 saving = true;
                 errors = null;
                 $wire.updateTableColumnState(@js($name), @js($recordKey), state)
@@ -41,10 +55,15 @@
                         originalState = state;
                         isEditing = false;
                         saving = false;
+                        // Show brief success feedback
+                        $wire.$refresh();
                     })
                     .catch((error) => {
-                        errors = error.response?.data?.errors || ['Update failed'];
+                        console.error('Save error:', error);
+                        errors = error.response?.data?.errors || error.message || ['Update failed'];
                         saving = false;
+                        // Auto-hide errors after 5 seconds
+                        setTimeout(() => { errors = null; }, 5000);
                     })
             "
             @keydown.escape="state = originalState; isEditing = false; errors = null"
@@ -55,13 +74,16 @@
                     errors = null;
                 }
             "
-            :placeholder="'Press Enter to save, Escape to cancel'"
+            :placeholder="saving ? 'Saving...' : 'Press Enter to save, Escape to cancel'"
+            :disabled="saving"
         />
         
         <button 
             @click="state = originalState; isEditing = false; errors = null"
             class="text-red-600 hover:text-red-800"
             title="Cancel (Escape)"
+            :disabled="saving"
+            :class="{ 'opacity-50 cursor-not-allowed': saving }"
         >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -69,10 +91,20 @@
         </button>
     </div>
 
-    <div x-show="errors" x-cloak class="text-red-600 text-xs mt-1">
-        <template x-for="error in errors">
-            <div x-text="error"></div>
-        </template>
+    <!-- Error Messages -->
+    <div x-show="errors" x-cloak class="text-red-600 text-xs mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+        <div class="flex items-center justify-between">
+            <div>
+                <template x-for="error in errors">
+                    <div x-text="error"></div>
+                </template>
+            </div>
+            <button @click="errors = null" class="ml-2 text-red-400 hover:text-red-600" title="Dismiss">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -96,5 +128,19 @@
     .dark .inline-edit-column input:focus {
         border-color: rgb(59 130 246);
         box-shadow: 0 0 0 1px rgb(59 130 246);
+    }
+    
+    .inline-edit-column input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .inline-edit-column .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>
