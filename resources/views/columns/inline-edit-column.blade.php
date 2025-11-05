@@ -22,10 +22,6 @@
             }
         }
     }"
-        x-init="() => {
-            // ensure timeouts are cleared when the page unloads
-            window.addEventListener('beforeunload', () => { if (timeoutId) { clearTimeout(timeoutId); } });
-        }"
     class="inline-edit-column"
 >
     <div 
@@ -40,14 +36,13 @@
         </svg>
     </div>
     
-    <!-- Saving State - Just show the value with subtle indication -->
+    <!-- Saving State - Just show the normal value, no ugly text -->
     <div 
         x-show="saving" 
         x-cloak
-        class="px-2 py-1 text-gray-500 dark:text-gray-400 italic"
+        class="px-2 py-1 text-gray-900 dark:text-gray-100"
     >
         <span x-text="state || '—'"></span>
-        <span class="text-xs ml-1">(saving...)</span>
     </div>
     
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
@@ -70,7 +65,7 @@
                 
                 $wire.updateTableColumnState(@js($name), @js($recordKey), state)
                     .then(() => {
-                        // clear any pending hide timeout when we succeed
+                        // clear any pending hide timeout when we succeeded
                         clearErrorTimeout();
                         originalState = state;
                         isEditing = false;
@@ -96,7 +91,7 @@
                             duration: 4000
                         });
                         
-                        // Auto-hide inline errors after 5 seconds (store id and clear any previous)
+                        // Auto-hide inline errors after 5 seconds
                         clearErrorTimeout();
                         timeoutId = setTimeout(() => { errors = null; timeoutId = null; }, 5000);
                     })
@@ -109,7 +104,7 @@
                     clearErrorTimeout(); errors = null;
                 }
             "
-            :placeholder="saving ? 'Saving...' : 'Press Enter to save, Escape to cancel'"
+            :placeholder="'Press Enter to save, Escape to cancel'"
             :disabled="saving"
         />
         
