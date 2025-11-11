@@ -35,6 +35,18 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                 condition: $customField->settings->searchable,
                 query: fn (Builder $query, string $search) => (new ColumnSearchableQuery)->builder($query, $customField, $search),
             )
-            ->getStateUsing(fn ($record) => $record->getCustomFieldValue($customField));
+            ->getStateUsing(fn ($record) => $record->getCustomFieldValue($customField))
+            ->updateStateUsing(function ($record, $state) use ($customField) {
+                $record->setCustomFieldValue($customField->code, $state);
+                return $state;
+            })
+            ->type(function () use ($customField) {
+                return match ($customField->type->value) {
+                    'number' => 'number',
+                    'link' => 'url',
+                    'currency' => 'number',
+                    default => 'text',
+                };
+            });
     }
 }
