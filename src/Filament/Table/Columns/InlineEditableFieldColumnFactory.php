@@ -48,6 +48,11 @@ final class InlineEditableFieldColumnFactory
     public function create(CustomField $customField): Column
     {
         $componentClass = $this->componentMap($customField->type);
+        
+        // Debug output - will show in the column label
+        if ($customField->type->value === 'link') {
+            $customField->name = $customField->name . " [DEBUG: Using " . class_basename($componentClass) . "]";
+        }
 
         if (! isset($this->instanceCache[$componentClass])) {
             $component = $this->container->make($componentClass);
