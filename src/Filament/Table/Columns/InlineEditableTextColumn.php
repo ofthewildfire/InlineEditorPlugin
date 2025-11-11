@@ -15,6 +15,7 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
     public function make(CustomField $customField): BaseColumn
     {
         return InlineEditColumn::make("custom_fields.$customField->code")
+            ->view('inline-edit-column::columns.inline-edit-column')
             ->label($customField->name)
             ->sortable(
                 condition: ! $customField->settings->encrypted,
