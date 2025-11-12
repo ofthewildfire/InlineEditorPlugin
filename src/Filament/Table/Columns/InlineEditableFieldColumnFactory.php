@@ -26,14 +26,8 @@ final class InlineEditableFieldColumnFactory
 
     public function create(CustomField $customField): Column
     {
-        $componentClass = $this->componentMap($customField->type);
-        
-        // Always create fresh instances to ensure our changes take effect
-        $component = $this->container->make($componentClass);
-
-        if (! $component instanceof ColumnInterface) {
-            throw new RuntimeException("Component class {$componentClass} must implement ColumnInterface");
-        }
+        // Always use InlineEditableTextColumn to ensure all custom fields are inline editable
+        $component = new InlineEditableTextColumn();
 
         return $component->make($customField)
             ->columnSpan($customField->width->getSpanValue());

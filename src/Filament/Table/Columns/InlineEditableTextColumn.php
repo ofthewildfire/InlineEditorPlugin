@@ -25,6 +25,8 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                     'number' => 'number',
                     'link' => 'url',
                     'currency' => 'number',
+                    'checkbox', 'toggle' => 'checkbox',
+                    'select', 'radio' => 'select',
                     default => 'text',
                 };
             });

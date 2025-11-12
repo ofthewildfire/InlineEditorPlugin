@@ -18,14 +18,13 @@ final readonly class InlineEditableCustomFieldsColumn
             return [];
         }
 
-        // Directly create InlineEditableTextColumn instances to bypass any factory caching issues
-        $inlineEditableColumn = new InlineEditableTextColumn();
+        $fieldColumnFactory = new InlineEditableFieldColumnFactory(app());
 
         return $instance->customFields()
             ->visibleInList()
             ->with('options')
             ->get()
-            ->map(fn (CustomField $customField) => $inlineEditableColumn->make($customField)
+            ->map(fn (CustomField $customField) => $fieldColumnFactory->create($customField)
                 ->toggleable(
                     condition: Utils::isTableColumnsToggleableEnabled(),
                     isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
