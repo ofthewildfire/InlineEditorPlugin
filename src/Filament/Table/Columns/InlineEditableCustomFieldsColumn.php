@@ -18,7 +18,7 @@ final readonly class InlineEditableCustomFieldsColumn
             return [];
         }
 
-        $fieldColumnFactory = new InlineEditableFieldColumnFactory(app());
+        $fieldColumnFactory = app(InlineEditableFieldColumnFactory::class);
 
         return $instance->customFields()
             ->visibleInList()

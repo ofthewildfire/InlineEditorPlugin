@@ -27,6 +27,7 @@ trait HasInlineEditableCustomFields
     public static function autoDiscoverAllInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = []): array
     {
         $columns = [];
+        $columnNames = []; // Track column names to prevent duplicates
         
         // Get the table name from the model instance
         $tableName = $instance->getTable();
@@ -84,12 +85,20 @@ trait HasInlineEditableCustomFields
             }
             
             $columns[] = $column;
+            $columnNames[] = $columnName;
         }
         
-        // ONLY add custom fields using our inline editable factory
-        // Don't rely on the automatic factory replacement
+        // Add custom fields using our inline editable factory
         $customFieldColumns = static::getInlineEditableCustomFieldColumns($instance);
-        $columns = array_merge($columns, $customFieldColumns);
+        
+        // Only add custom field columns that don't already exist
+        foreach ($customFieldColumns as $customColumn) {
+            $customColumnName = $customColumn->getName();
+            if (!in_array($customColumnName, $columnNames)) {
+                $columns[] = $customColumn;
+                $columnNames[] = $customColumnName;
+            }
+        }
         
         return $columns;
     }

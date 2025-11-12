@@ -19,7 +19,11 @@ final class InlineEditPluginServiceProvider extends ServiceProvider
         // This avoids forcing a global replacement for all consumers of FieldColumnFactory.
         if (config('inline-edit-column.enabled', false)) {
             // Replace the original FieldColumnFactory with our InlineEditableFieldColumnFactory
-            $this->app->bind(FieldColumnFactory::class, InlineEditableFieldColumnFactory::class);
+            // Use singleton to ensure the same instance is used everywhere
+            $this->app->singleton(FieldColumnFactory::class, InlineEditableFieldColumnFactory::class);
+            
+            // Also bind it as an alias in case it's being resolved differently
+            $this->app->alias(InlineEditableFieldColumnFactory::class, FieldColumnFactory::class);
         }
     }
 
