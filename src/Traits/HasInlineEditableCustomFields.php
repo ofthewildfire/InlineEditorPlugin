@@ -86,9 +86,36 @@ trait HasInlineEditableCustomFields
             $columns[] = $column;
         }
         
-        // Don't add separate custom field columns - they're already being added by the original system
-        // Our factory will automatically make the editable ones inline editable when they're created
+        // Get existing custom field columns from the original system (non-editable)
+        $originalCustomFields = static::getInlineEditableCustomFieldColumns($instance);
         
-        return $columns;
+        // Transform text-based custom fields into editable versions while keeping others as-is
+        $transformedCustomFields = [];
+        foreach ($originalCustomFields as $column) {
+            // If it's a text-based custom field column, transform it to be editable
+            if (method_exists($column, 'getName') && $column->getName()) {
+                // Get the custom field for this column
+                $customFields = $instance->customFields()->get();
+                $customField = $customFields->firstWhere('code', $column->getName());
+                
+                if ($customField && in_array($customField->type->value, ['text', 'textarea', 'link', 'number', 'currency'])) {
+                    // Create an editable version
+                    $inlineEditableColumn = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableTextColumn();
+                    $transformedCustomFields[] = $inlineEditableColumn->make($customField)
+                        ->toggleable(
+                            condition: \Relaticle\CustomFields\Support\Utils::isTableColumnsToggleableEnabled(),
+                            isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
+                        );
+                } else {
+                    // Keep original column for non-text fields
+                    $transformedCustomFields[] = $column;
+                }
+            } else {
+                // Keep original column
+                $transformedCustomFields[] = $column;
+            }
+        }
+        
+        return array_merge($columns, $transformedCustomFields);
     }
 }
