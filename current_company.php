@@ -68,41 +68,7 @@ final class CompanyResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(static::addInlineEditableCustomFields([
-                ImageColumn::make('logo')->label('')->size(30)->square(),
-                InlineEditColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('accountOwner.name')
-                    ->label('Account Owner')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-                TextColumn::make('creator.name')
-                    ->label('Created By')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable()
-                    ->getStateUsing(fn (Company $record): string => $record->created_by)
-                    ->color(fn (Company $record): string => $record->isSystemCreated() ? 'secondary' : 'primary'),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable()
-                    ->toggledHiddenByDefault(),
-                TextColumn::make('created_at')
-                    ->label('Creation Date')
-                    ->dateTime()
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-                TextColumn::make('updated_at')
-                    ->label('Last Update')
-                    ->since()
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-            ], new Company()))
+            ->columns(static::autoDiscoverAllInlineEditableColumns(new Company()))
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('creation_source')
