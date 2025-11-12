@@ -60,6 +60,7 @@ trait HasInlineEditableCustomFields
                 ->label(ucwords(str_replace('_', ' ', $columnName)))
                 ->searchable()
                 ->sortable()
+                ->toggleable()  // Make columns toggleable so they appear in the columns dropdown
                 ->updateStateUsing(function ($record, $state) use ($columnName) {
                     $record->update([$columnName => $state]);
                     return $state;
