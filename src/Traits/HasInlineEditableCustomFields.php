@@ -24,7 +24,7 @@ trait HasInlineEditableCustomFields
         return array_merge($columns, static::getInlineEditableCustomFieldColumns($instance));
     }
     
-    public static function autoDiscoverAllInlineEditableColumns(Model $instance): array
+    public static function autoDiscoverAllInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = []): array
     {
         $columns = [];
         
@@ -32,10 +32,21 @@ trait HasInlineEditableCustomFields
         $tableName = $instance->getTable();
         $fillableFields = $instance->getFillable();
         $hiddenFields = $instance->getHidden();
-        $skipFields = ['id', 'password', 'remember_token', 'email_verified_at', 'deleted_at'];
+        $defaultSkipFields = [
+            'id', 'password', 'remember_token', 'email_verified_at', 'deleted_at',
+            'team_id', 'creator_id', 'account_owner_id', 'user_id', 'created_by', 'updated_by'
+        ];
+        
+        // Merge default skip fields with user-provided exclude fields
+        $skipFields = array_merge($defaultSkipFields, $excludeFields);
         
         // Get all columns from the database table
         $tableColumns = Schema::getColumnListing($tableName);
+        
+        // If includeFields is specified, only include those fields
+        if (!empty($includeFields)) {
+            $tableColumns = array_intersect($tableColumns, $includeFields);
+        }
         
         // Auto-discover regular model fields and make them ALL inline editable
         foreach ($tableColumns as $columnName) {

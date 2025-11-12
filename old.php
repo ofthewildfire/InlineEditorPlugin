@@ -33,9 +33,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Relaticle\CustomFields\Filament\Forms\Components\CustomFieldsComponent;
 use OfTheWildfire\FilamentInlineEditColumn\Traits\HasInlineEditableCustomFields;
 use OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditColumn;
+use OfTheWildfire\FilamentInlineEditColumn\Traits\HasInlineEditableCustomFields
 
 final class CompanyResource extends Resource
 {
+    
     use HasInlineEditableCustomFields;
     
     protected static ?string $model = Company::class;
@@ -68,10 +70,43 @@ final class CompanyResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(static::autoDiscoverAllInlineEditableColumns(
-                new Company(), 
-                ['name', 'created_at', 'updated_at']  // Only show these database fields
-            ))
+            ->columns(static::addInlineEditableCustomFields([
+                ImageColumn::make('logo')->label('')->size(30)->square(),
+                InlineEditColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                InlineEditColumn::make('custom_fields.domain_name')
+          ->label('Test Link Field'),
+                TextColumn::make('accountOwner.name')
+                    ->label('Account Owner')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('creator.name')
+                    ->label('Created By')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable()
+                    ->getStateUsing(fn (Company $record): string => $record->created_by)
+                    ->color(fn (Company $record): string => $record->isSystemCreated() ? 'secondary' : 'primary'),
+                TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
+                TextColumn::make('created_at')
+                    ->label('Creation Date')
+                    ->dateTime()
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('updated_at')
+                    ->label('Last Update')
+                    ->since()
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+            ], new Company()))
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('creation_source')
