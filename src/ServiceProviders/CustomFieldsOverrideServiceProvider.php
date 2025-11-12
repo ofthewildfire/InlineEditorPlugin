@@ -12,7 +12,9 @@ class CustomFieldsOverrideServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Replace the original FieldColumnFactory with our InlineEditableFieldColumnFactory
-        $this->app->bind(FieldColumnFactory::class, InlineEditableFieldColumnFactory::class);
+        // Only replace the original FieldColumnFactory when explicitly enabled in config
+        if (config('inline-edit-column.enabled', false)) {
+            $this->app->bind(FieldColumnFactory::class, InlineEditableFieldColumnFactory::class);
+        }
     }
 }
