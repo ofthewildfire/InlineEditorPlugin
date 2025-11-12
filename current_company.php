@@ -68,10 +68,7 @@ final class CompanyResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(static::autoDiscoverAllInlineEditableColumns(
-                new Company(), 
-                ['name', 'created_at', 'updated_at']  // Only show these database fields
-            ))
+            ->columns(static::autoDiscoverAllInlineEditableColumns(new Company()))
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('creation_source')

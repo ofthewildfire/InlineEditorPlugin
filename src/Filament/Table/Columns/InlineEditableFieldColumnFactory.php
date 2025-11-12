@@ -28,17 +28,11 @@ final class InlineEditableFieldColumnFactory
     {
         $componentClass = $this->componentMap($customField->type);
         
+        // Always create fresh instances to ensure our changes take effect
+        $component = $this->container->make($componentClass);
 
-        if (! isset($this->instanceCache[$componentClass])) {
-            $component = $this->container->make($componentClass);
-
-            if (! $component instanceof ColumnInterface) {
-                throw new RuntimeException("Component class {$componentClass} must implement ColumnInterface");
-            }
-
-            $this->instanceCache[$componentClass] = $component;
-        } else {
-            $component = $this->instanceCache[$componentClass];
+        if (! $component instanceof ColumnInterface) {
+            throw new RuntimeException("Component class {$componentClass} must implement ColumnInterface");
         }
 
         return $component->make($customField)
