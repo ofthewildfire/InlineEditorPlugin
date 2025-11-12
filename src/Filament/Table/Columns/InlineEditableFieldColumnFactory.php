@@ -20,14 +20,45 @@ final class InlineEditableFieldColumnFactory
 
     private function componentMap(CustomFieldType $type): string
     {
-        // ALL custom field types now use InlineEditableTextColumn for automatic inline editing
-        return InlineEditableTextColumn::class;
+        return match ($type) {
+            // Text-based fields that work well with inline editing
+            CustomFieldType::TEXT, 
+            CustomFieldType::TEXTAREA, 
+            CustomFieldType::NUMBER, 
+            CustomFieldType::LINK, 
+            CustomFieldType::CURRENCY,
+            CustomFieldType::RICH_EDITOR,
+            CustomFieldType::MARKDOWN_EDITOR => InlineEditableTextColumn::class,
+            
+            // Keep boolean/checkbox fields as regular display columns (not inline editable)
+            CustomFieldType::CHECKBOX, 
+            CustomFieldType::TOGGLE => \Relaticle\CustomFields\Filament\Tables\Columns\IconColumn::class,
+            
+            // Other field types - use original columns for now
+            CustomFieldType::SELECT, 
+            CustomFieldType::RADIO => \Relaticle\CustomFields\Filament\Tables\Columns\SingleValueColumn::class,
+            CustomFieldType::COLOR_PICKER => \Relaticle\CustomFields\Filament\Tables\Columns\ColorColumn::class,
+            CustomFieldType::MULTI_SELECT, 
+            CustomFieldType::TOGGLE_BUTTONS, 
+            CustomFieldType::CHECKBOX_LIST,
+            CustomFieldType::TAGS_INPUT => \Relaticle\CustomFields\Filament\Tables\Columns\MultiValueColumn::class,
+            CustomFieldType::DATE, 
+            CustomFieldType::DATE_TIME => \Relaticle\CustomFields\Filament\Tables\Columns\DateTimeColumn::class,
+            
+            default => InlineEditableTextColumn::class,
+        };
     }
 
     public function create(CustomField $customField): Column
     {
-        // Always use InlineEditableTextColumn to ensure all custom fields are inline editable
-        $component = new InlineEditableTextColumn();
+        $componentClass = $this->componentMap($customField->type);
+        
+        // Create fresh instances
+        $component = $this->container->make($componentClass);
+
+        if (! $component instanceof ColumnInterface) {
+            throw new RuntimeException("Component class {$componentClass} must implement ColumnInterface");
+        }
 
         return $component->make($customField)
             ->columnSpan($customField->width->getSpanValue());
