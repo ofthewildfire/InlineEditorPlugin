@@ -86,24 +86,8 @@ trait HasInlineEditableCustomFields
             $columns[] = $column;
         }
         
-        // Directly get custom fields and create the right column types (bypassing duplicates)
-        $customFields = $instance->customFields()->visibleInList()->with('options')->get();
-        
-        foreach ($customFields as $customField) {
-            if (in_array($customField->type->value, ['text', 'textarea', 'link', 'number', 'currency'])) {
-                // Create editable version for text-based fields
-                $inlineEditableColumn = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableTextColumn();
-                $columns[] = $inlineEditableColumn->make($customField)
-                    ->toggleable(
-                        condition: \Relaticle\CustomFields\Support\Utils::isTableColumnsToggleableEnabled(),
-                        isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
-                    );
-            } else {
-                // Create original column type for non-text fields (checkbox, etc.)
-                $factory = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableFieldColumnFactory(app());
-                $columns[] = $factory->create($customField);
-            }
-        }
+        // Custom fields are now handled automatically by the hijacked FieldColumnFactory
+        // No need to add them here since the original system will create editable ones!
         
         return $columns;
     }
