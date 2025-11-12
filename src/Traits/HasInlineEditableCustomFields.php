@@ -86,36 +86,25 @@ trait HasInlineEditableCustomFields
             $columns[] = $column;
         }
         
-        // Get existing custom field columns from the original system (non-editable)
-        $originalCustomFields = static::getInlineEditableCustomFieldColumns($instance);
+        // Directly get custom fields and create the right column types (bypassing duplicates)
+        $customFields = $instance->customFields()->visibleInList()->with('options')->get();
         
-        // Transform text-based custom fields into editable versions while keeping others as-is
-        $transformedCustomFields = [];
-        foreach ($originalCustomFields as $column) {
-            // If it's a text-based custom field column, transform it to be editable
-            if (method_exists($column, 'getName') && $column->getName()) {
-                // Get the custom field for this column
-                $customFields = $instance->customFields()->get();
-                $customField = $customFields->firstWhere('code', $column->getName());
-                
-                if ($customField && in_array($customField->type->value, ['text', 'textarea', 'link', 'number', 'currency'])) {
-                    // Create an editable version
-                    $inlineEditableColumn = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableTextColumn();
-                    $transformedCustomFields[] = $inlineEditableColumn->make($customField)
-                        ->toggleable(
-                            condition: \Relaticle\CustomFields\Support\Utils::isTableColumnsToggleableEnabled(),
-                            isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
-                        );
-                } else {
-                    // Keep original column for non-text fields
-                    $transformedCustomFields[] = $column;
-                }
+        foreach ($customFields as $customField) {
+            if (in_array($customField->type->value, ['text', 'textarea', 'link', 'number', 'currency'])) {
+                // Create editable version for text-based fields
+                $inlineEditableColumn = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableTextColumn();
+                $columns[] = $inlineEditableColumn->make($customField)
+                    ->toggleable(
+                        condition: \Relaticle\CustomFields\Support\Utils::isTableColumnsToggleableEnabled(),
+                        isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
+                    );
             } else {
-                // Keep original column
-                $transformedCustomFields[] = $column;
+                // Create original column type for non-text fields (checkbox, etc.)
+                $factory = new \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableFieldColumnFactory(app());
+                $columns[] = $factory->create($customField);
             }
         }
         
-        return array_merge($columns, $transformedCustomFields);
+        return $columns;
     }
 }
