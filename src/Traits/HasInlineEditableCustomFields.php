@@ -39,6 +39,62 @@ trait HasInlineEditableCustomFields
         return $uniqueColumns;
     }
     
+    public static function getOnlyInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = []): array
+    {
+        $columns = [];
+        $tableName = $instance->getTable();
+        $defaultSkipFields = [
+            'id', 'password', 'remember_token', 'email_verified_at', 'deleted_at',
+            'team_id', 'creator_id', 'account_owner_id', 'user_id', 'created_by', 'updated_by'
+        ];
+        $skipFields = array_merge($defaultSkipFields, $excludeFields);
+        $tableColumns = \Illuminate\Support\Facades\Schema::getColumnListing($tableName);
+        
+        if (!empty($includeFields)) {
+            $tableColumns = array_intersect($tableColumns, $includeFields);
+        }
+        
+        // Add regular database columns
+        foreach ($tableColumns as $columnName) {
+            if (in_array($columnName, $skipFields)) {
+                continue;
+            }
+            
+            $column = InlineEditColumn::make($columnName)
+                ->label(ucwords(str_replace('_', ' ', $columnName)))
+                ->searchable()
+                ->sortable()
+                ->toggleable()
+                ->updateStateUsing(function ($record, $state) use ($columnName) {
+                    $record->update([$columnName => $state]);
+                    return $state;
+                });
+            
+            // Set input types
+            if (str_contains($columnName, 'email')) {
+                $column->type('email');
+            } elseif (str_contains($columnName, 'url') || str_contains($columnName, 'link')) {
+                $column->type('url');
+            } elseif (str_contains($columnName, 'phone')) {
+                $column->type('tel');
+            } elseif (str_contains($columnName, 'number') || str_contains($columnName, 'count') || str_contains($columnName, 'amount')) {
+                $column->type('number');
+            } elseif (str_contains($columnName, 'date') || str_contains($columnName, 'at')) {
+                $column->type('datetime-local');
+            } else {
+                $column->type('text');
+            }
+            
+            $columns[] = $column;
+        }
+        
+        // Add ONLY our custom field columns - bypass the automatic system entirely
+        $customFieldColumns = static::getInlineEditableCustomFieldColumns($instance);
+        $columns = array_merge($columns, $customFieldColumns);
+        
+        return $columns;
+    }
+    
     public static function addInlineEditableCustomFields(array $columns, Model $instance): array
     {
         return array_merge($columns, static::getInlineEditableCustomFieldColumns($instance));
