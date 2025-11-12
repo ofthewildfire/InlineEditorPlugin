@@ -86,7 +86,8 @@ trait HasInlineEditableCustomFields
             $columns[] = $column;
         }
         
-        // Add custom fields using our inline editable factory
+        // ONLY add custom fields using our inline editable factory
+        // Don't rely on the automatic factory replacement
         $customFieldColumns = static::getInlineEditableCustomFieldColumns($instance);
         $columns = array_merge($columns, $customFieldColumns);
         
