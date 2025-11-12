@@ -19,6 +19,26 @@ trait HasInlineEditableCustomFields
         return InlineEditableCustomFieldsColumn::all($instance);
     }
     
+    public static function getUniqueInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = []): array
+    {
+        // Get all columns including any that might be automatically added
+        $allColumns = static::autoDiscoverAllInlineEditableColumns($instance, $includeFields, $excludeFields);
+        
+        // Remove duplicates by name - keep only the first occurrence
+        $uniqueColumns = [];
+        $seenNames = [];
+        
+        foreach ($allColumns as $column) {
+            $columnName = $column->getName();
+            if (!in_array($columnName, $seenNames)) {
+                $uniqueColumns[] = $column;
+                $seenNames[] = $columnName;
+            }
+        }
+        
+        return $uniqueColumns;
+    }
+    
     public static function addInlineEditableCustomFields(array $columns, Model $instance): array
     {
         return array_merge($columns, static::getInlineEditableCustomFieldColumns($instance));
