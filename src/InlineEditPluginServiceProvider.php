@@ -24,6 +24,12 @@ final class InlineEditPluginServiceProvider extends ServiceProvider
             
             // Also bind it as an alias in case it's being resolved differently
             $this->app->alias(InlineEditableFieldColumnFactory::class, FieldColumnFactory::class);
+            
+            // Replace the CustomFieldsColumn class that creates the factory directly
+            $this->app->bind(
+                \Relaticle\CustomFields\Filament\Tables\Columns\CustomFieldsColumn::class,
+                \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\CustomFieldsColumnOverride::class
+            );
         }
     }
 
