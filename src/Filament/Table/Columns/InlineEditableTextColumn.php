@@ -17,7 +17,7 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
             ->label($customField->name)
             ->getStateUsing(fn ($record) => $record->getCustomFieldValue($customField))
             ->updateStateUsing(function ($record, $state) use ($customField) {
-                $record->setCustomFieldValue($customField->code, $state);
+                $record->saveCustomFieldValue($customField, $state);
                 return $state;
             })
             ->type(function () use ($customField) {
