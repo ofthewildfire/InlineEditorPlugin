@@ -9,7 +9,8 @@
     $displayState = $state;
     if (in_array($type, ['date', 'datetime-local', 'datetime']) && $state) {
         try {
-            $displayState = \Carbon\Carbon::parse($state)->format($type === 'date' ? 'M j, Y' : 'M j, Y g:i A');
+            $carbon = \Carbon\Carbon::parse($state);
+            $displayState = $type === 'date' ? $carbon->format('M j, Y') : $carbon->format('M j, Y g:i A');
         } catch (\Exception $e) {
             $displayState = $state;
         }
@@ -99,7 +100,7 @@
         class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors"
         :title="'Click to edit'"
     >
-        <span x-text="@js($displayState) || '—'" class="text-gray-900 dark:text-gray-100"></span>
+        <span class="text-gray-900 dark:text-gray-100">{{ $displayState ?: '—' }}</span>
         <svg class="inline-block w-3 h-3 ml-1 opacity-30 hover:opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
