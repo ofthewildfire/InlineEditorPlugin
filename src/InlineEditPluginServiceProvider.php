@@ -30,6 +30,12 @@ final class InlineEditPluginServiceProvider extends ServiceProvider
                 \Relaticle\CustomFields\Filament\Tables\Columns\CustomFieldsColumn::class,
                 \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\CustomFieldsColumnOverride::class
             );
+            
+            // Also try to alias it
+            $this->app->alias(
+                \OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\CustomFieldsColumnOverride::class,
+                \Relaticle\CustomFields\Filament\Tables\Columns\CustomFieldsColumn::class
+            );
         }
     }
 
