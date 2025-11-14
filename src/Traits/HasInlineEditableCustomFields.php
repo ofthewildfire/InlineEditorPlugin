@@ -154,7 +154,9 @@ trait HasInlineEditableCustomFields
                 $column->type('password');
             } elseif (str_contains($columnName, 'number') || str_contains($columnName, 'count') || str_contains($columnName, 'amount')) {
                 $column->type('number');
-            } elseif (str_contains($columnName, 'date') || str_contains($columnName, 'at')) {
+            } elseif (str_contains($columnName, 'date') && str_contains($columnName, 'time')) {
+                $column->type('datetime-local');
+            } elseif (str_contains($columnName, 'date') || $columnName === 'created_at' || $columnName === 'updated_at') {
                 $column->type('datetime-local');
             } else {
                 $column->type('text');

@@ -27,6 +27,8 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                     'currency' => 'number',
                     'checkbox', 'toggle' => 'checkbox',
                     'select', 'radio' => 'select',
+                    'date' => 'date',
+                    'date_time' => 'datetime-local',
                     default => 'text',
                 };
             });

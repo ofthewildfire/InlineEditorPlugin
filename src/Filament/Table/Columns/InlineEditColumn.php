@@ -27,6 +27,7 @@ class InlineEditColumn extends Column implements Editable
 
     protected string | RawJs | Closure | null $mask = null;
     protected string | Closure | null $type = null;
+    protected string | Closure | null $inputComponent = null;
 
     protected function setUp(): void
     {
@@ -43,5 +44,16 @@ class InlineEditColumn extends Column implements Editable
     public function getType(): string
     {
         return $this->evaluate($this->type) ?? 'text';
+    }
+    
+    public function inputComponent(string | Closure | null $component): static
+    {
+        $this->inputComponent = $component;
+        return $this;
+    }
+    
+    public function getInputComponent(): ?string
+    {
+        return $this->evaluate($this->inputComponent);
     }
 }
