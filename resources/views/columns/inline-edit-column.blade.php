@@ -5,8 +5,7 @@
     $type = $getType();
     $inputComponent = $getInputComponent();
     
-    // Debug: Uncomment to see field info
-    dd(['name' => $name, 'type' => $type, 'state' => $state]);
+
     
     // Format display value for dates
     $displayState = $state;

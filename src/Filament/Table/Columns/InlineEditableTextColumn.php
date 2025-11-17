@@ -21,6 +21,17 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                 return $state;
             })
             ->type(function () use ($customField) {
+                // Debug the actual enum value - only for company_founded field
+                if ($customField->code === 'company_founded') {
+                    dd([
+                        'field_name' => $customField->name,
+                        'field_code' => $customField->code,
+                        'type_value' => $customField->type->value,
+                        'type_name' => $customField->type->name ?? 'no name',
+                        'type_class' => get_class($customField->type),
+                    ]);
+                }
+                
                 return match ($customField->type->value) {
                     'number' => 'number',
                     'link' => 'url',
@@ -29,10 +40,11 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                     'select', 'radio' => 'select',
                     'date' => 'date',
                     'date_time' => 'datetime-local',
-                    // Also try these variations in case the enum values are different
+                    // Try all possible variations
                     'datetime' => 'datetime-local',
                     'date-time' => 'datetime-local',
                     'DATE_TIME' => 'datetime-local',
+                    'dateTime' => 'datetime-local',
                     default => 'text',
                 };
             });
