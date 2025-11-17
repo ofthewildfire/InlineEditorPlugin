@@ -29,6 +29,10 @@ final readonly class InlineEditableTextColumn implements ColumnInterface
                     'select', 'radio' => 'select',
                     'date' => 'date',
                     'date_time' => 'datetime-local',
+                    // Also try these variations in case the enum values are different
+                    'datetime' => 'datetime-local',
+                    'date-time' => 'datetime-local',
+                    'DATE_TIME' => 'datetime-local',
                     default => 'text',
                 };
             });
