@@ -5,9 +5,16 @@
     $type = $getType();
     $inputComponent = $getInputComponent();
     
+    // Debug: Let's see what type we're getting
+    // dd(['name' => $name, 'type' => $type, 'state' => $state]);
+    
     // Format display value for dates
     $displayState = $state;
-    if (in_array($type, ['date', 'datetime-local', 'datetime']) && $state) {
+    $isDateField = in_array($type, ['date', 'datetime-local', 'datetime']) || 
+                   in_array($name, ['created_at', 'updated_at']) ||
+                   str_contains($name, 'date');
+    
+    if ($isDateField && $state) {
         try {
             $carbon = \Carbon\Carbon::parse($state);
             $displayState = $type === 'date' ? $carbon->format('M j, Y') : $carbon->format('M j, Y g:i A');
@@ -107,7 +114,7 @@
     </div>
     
     <div x-show="isEditing" class="flex items-center space-x-1" x-cloak>
-        @if(in_array($type, ['date', 'datetime-local', 'datetime']))
+        @if($isDateField)
             <!-- Enhanced Date/DateTime Picker -->
             <div class="relative">
                 <input 
