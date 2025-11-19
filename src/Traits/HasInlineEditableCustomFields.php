@@ -6,6 +6,7 @@ namespace OfTheWildfire\FilamentInlineEditColumn\Traits;
 
 use OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditableCustomFieldsColumn;
 use OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\InlineEditColumn;
+use OfTheWildfire\FilamentInlineEditColumn\Filament\Table\Columns\SmartLogoColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -39,9 +40,14 @@ trait HasInlineEditableCustomFields
         return $uniqueColumns;
     }
     
-    public static function getOnlyInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = []): array
+    public static function getOnlyInlineEditableColumns(Model $instance, array $includeFields = [], array $excludeFields = [], bool $includeLogo = true): array
     {
         $columns = [];
+        
+        // Add smart logo column first if requested
+        if ($includeLogo) {
+            $columns[] = static::getSmartLogoColumn($instance, '30');
+        }
         $tableName = $instance->getTable();
         $defaultSkipFields = [
             'id', 'password', 'remember_token', 'email_verified_at', 'deleted_at',
@@ -179,5 +185,17 @@ trait HasInlineEditableCustomFields
         }
         
         return $columns;
+    }
+    
+    public static function getSmartLogoColumn(Model $instance, string $size = '40'): SmartLogoColumn
+    {
+        return SmartLogoColumn::make('logo')
+            ->label('')
+            ->size($size)
+            ->square()
+            ->domainAttribute('domain') // Will also check custom field 'domain_name'
+            ->nameAttribute('name')
+            ->showInitials(true)
+            ->tryFavicon(true);
     }
 }
