@@ -70,10 +70,14 @@ class SmartLogoColumn extends ImageColumn
         if (!$domain) {
             // Try to get domain from custom fields
             if (method_exists($record, 'getCustomFieldValue')) {
-                $customFields = $record->customFields ?? collect();
-                $domainField = $customFields->where('code', 'domain_name')->first();
-                if ($domainField) {
-                    $domain = $record->getCustomFieldValue($domainField);
+                try {
+                    $customFields = $record->customFields()->get();
+                    $domainField = $customFields->where('code', 'domain_name')->first();
+                    if ($domainField) {
+                        $domain = $record->getCustomFieldValue($domainField);
+                    }
+                } catch (\Exception $e) {
+                    // Ignore if custom fields relationship doesn't exist or fails
                 }
             }
         }
