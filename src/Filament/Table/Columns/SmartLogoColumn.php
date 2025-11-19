@@ -18,8 +18,8 @@ class SmartLogoColumn extends ImageColumn
     {
         parent::setUp();
         
-        $this->getStateUsing(function (Model $record): ?string {
-            // 1. Try favicon from domain first
+        $this->getStateUsing(function (Model $record): string {
+            // 1. Try favicon from domain first (if domain exists)
             if ($this->tryFavicon) {
                 $faviconUrl = $this->getFaviconUrl($record);
                 if ($faviconUrl) {
@@ -27,12 +27,8 @@ class SmartLogoColumn extends ImageColumn
                 }
             }
             
-            // 2. Fall back to initials
-            if ($this->showInitials) {
-                return $this->getInitialsUrl($record);
-            }
-            
-            return null;
+            // 2. Always fall back to nice initials
+            return $this->getInitialsUrl($record);
         });
     }
 
@@ -166,12 +162,12 @@ class SmartLogoColumn extends ImageColumn
 
     protected function generateInitialsDataUrl(string $initials, string $color): string
     {
-        // Create SVG for initials
-        $svg = '
-        <svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
-            <rect width="64" height="64" fill="' . $color . '" rx="8"/>
-            <text x="32" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" 
-                  text-anchor="middle" fill="white">' . htmlspecialchars($initials) . '</text>
+        // Create clean, modern SVG for initials
+        $svg = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+            <rect width="64" height="64" fill="' . $color . '" rx="6"/>
+            <text x="32" y="42" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" 
+                  font-size="26" font-weight="600" text-anchor="middle" fill="white" 
+                  dominant-baseline="middle">' . htmlspecialchars($initials) . '</text>
         </svg>';
         
         return 'data:image/svg+xml;base64,' . base64_encode($svg);
