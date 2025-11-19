@@ -62,6 +62,9 @@
                     this.isEditing = false;
                     this.saving = false;
                     
+                    // Update the display immediately without full refresh
+                    // The state is already updated, just need to trigger reactivity
+                    
                     // Show success notification
                     window.FilamentNotifications && window.FilamentNotifications.notify({
                         title: 'Saved successfully',
@@ -107,7 +110,7 @@
         class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors"
         :title="'Click to edit'"
     >
-        <span class="text-gray-900 dark:text-gray-100">{{ $displayState ?: '—' }}</span>
+        <span class="text-gray-900 dark:text-gray-100" x-text="state || '—'"></span>
         @if($isDateField)
             <svg class="inline-block w-3 h-3 ml-2 opacity-30 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
