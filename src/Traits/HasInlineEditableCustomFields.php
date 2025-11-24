@@ -187,7 +187,7 @@ trait HasInlineEditableCustomFields
         return $columns;
     }
     
-    public static function getSmartLogoColumn(Model $instance, string $size = '40'): SmartLogoColumn
+    public static function getSmartLogoColumn(Model $instance, string $size = '24'): SmartLogoColumn
     {
         return SmartLogoColumn::make('logo')
             ->label('')

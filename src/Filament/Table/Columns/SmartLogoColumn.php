@@ -19,15 +19,8 @@ class SmartLogoColumn extends ImageColumn
         parent::setUp();
         
         $this->getStateUsing(function (Model $record): string {
-            // 1. Try favicon from domain first (if domain exists)
-            if ($this->tryFavicon) {
-                $faviconUrl = $this->getFaviconUrl($record);
-                if ($faviconUrl) {
-                    return $faviconUrl;
-                }
-            }
-            
-            // 2. Always fall back to nice initials
+            // Always use nice initials for consistency
+            // (Favicon fetching often shows ugly fallback globes)
             return $this->getInitialsUrl($record);
         });
     }
@@ -162,11 +155,11 @@ class SmartLogoColumn extends ImageColumn
 
     protected function generateInitialsDataUrl(string $initials, string $color): string
     {
-        // Create clean, modern SVG for initials
-        $svg = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
-            <rect width="64" height="64" fill="' . $color . '" rx="6"/>
-            <text x="32" y="42" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" 
-                  font-size="26" font-weight="600" text-anchor="middle" fill="white" 
+        // Create clean, modern SVG for initials (smaller size)
+        $svg = '<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" fill="' . $color . '" rx="4"/>
+            <text x="24" y="30" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" 
+                  font-size="18" font-weight="600" text-anchor="middle" fill="white" 
                   dominant-baseline="middle">' . htmlspecialchars($initials) . '</text>
         </svg>';
         
