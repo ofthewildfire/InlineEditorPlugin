@@ -61,6 +61,13 @@ class SmartLogoColumn extends ImageColumn
     protected function getValidFaviconUrl(Model $record): ?string
     {
         $domain = $this->getDomainFromRecord($record);
+        
+        // Debug: Log what domain we found
+        \Log::info('SmartLogo Debug', [
+            'company_name' => $record->name ?? 'unknown',
+            'domain_found' => $domain,
+        ]);
+        
         if (!$domain) {
             return null;
         }
@@ -72,7 +79,15 @@ class SmartLogoColumn extends ImageColumn
         ];
         
         foreach ($faviconServices as $faviconUrl) {
-            if ($this->isValidFavicon($faviconUrl)) {
+            $isValid = $this->isValidFavicon($faviconUrl);
+            
+            // Debug: Log validation results
+            \Log::info('Favicon validation', [
+                'url' => $faviconUrl,
+                'is_valid' => $isValid,
+            ]);
+            
+            if ($isValid) {
                 return $faviconUrl;
             }
         }
@@ -106,18 +121,17 @@ class SmartLogoColumn extends ImageColumn
     protected function isValidFavicon(string $url): bool
     {
         try {
-            // Use a simple HTTP HEAD request to check if favicon exists and get size info
             $context = stream_context_create([
                 'http' => [
                     'method' => 'HEAD',
-                    'timeout' => 3, // 3 second timeout
+                    'timeout' => 2, // 2 second timeout
                     'user_agent' => 'Mozilla/5.0 (compatible; FaviconChecker/1.0)',
                 ]
             ]);
             
             $headers = @get_headers($url, true, $context);
             
-            if (!$headers || strpos($headers[0], '200') === false) {
+            if (!$headers || !isset($headers[0]) || strpos($headers[0], '200') === false) {
                 return false;
             }
             
@@ -132,7 +146,12 @@ class SmartLogoColumn extends ImageColumn
                 return false;
             }
             
-            // Check content length (size in bytes)
+            // SVGs are always good (vector graphics scale perfectly)
+            if (str_contains($contentType, 'image/svg') || str_contains($contentType, 'svg+xml')) {
+                return true;
+            }
+            
+            // For raster images (PNG, JPG, etc.), check file size
             $contentLength = $headers['Content-Length'] ?? 0;
             if (is_array($contentLength)) {
                 $contentLength = $contentLength[0];
@@ -142,11 +161,7 @@ class SmartLogoColumn extends ImageColumn
             $minSize = 100; // 100 bytes minimum
             $maxSize = 50000; // 50KB maximum
             
-            if ($contentLength < $minSize || $contentLength > $maxSize) {
-                return false;
-            }
-            
-            return true;
+            return $contentLength >= $minSize && $contentLength <= $maxSize;
             
         } catch (\Exception $e) {
             return false;
