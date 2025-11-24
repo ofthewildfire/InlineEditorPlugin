@@ -115,7 +115,7 @@ class SmartLogoColumn extends ImageColumn
                 ]
             ]);
             
-            $headers = @get_headers($url, 1, $context);
+            $headers = @get_headers($url, true, $context);
             
             if (!$headers || strpos($headers[0], '200') === false) {
                 return false;
