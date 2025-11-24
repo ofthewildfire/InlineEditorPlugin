@@ -19,8 +19,15 @@ class SmartLogoColumn extends ImageColumn
         parent::setUp();
         
         $this->getStateUsing(function (Model $record): string {
-            // Always use nice initials for consistency
-            // (Favicon fetching often shows ugly fallback globes)
+            // 1. Try favicon from domain first (with size validation)
+            if ($this->tryFavicon) {
+                $faviconUrl = $this->getValidFaviconUrl($record);
+                if ($faviconUrl) {
+                    return $faviconUrl;
+                }
+            }
+            
+            // 2. Fall back to nice initials
             return $this->getInitialsUrl($record);
         });
     }
@@ -51,6 +58,101 @@ class SmartLogoColumn extends ImageColumn
 
 
 
+    protected function getValidFaviconUrl(Model $record): ?string
+    {
+        $domain = $this->getDomainFromRecord($record);
+        if (!$domain) {
+            return null;
+        }
+        
+        // Try different favicon services and validate size
+        $faviconServices = [
+            "https://www.google.com/s2/favicons?domain={$domain}&sz=32",
+            "https://favicon.im/{$domain}?larger=true",
+        ];
+        
+        foreach ($faviconServices as $faviconUrl) {
+            if ($this->isValidFavicon($faviconUrl)) {
+                return $faviconUrl;
+            }
+        }
+        
+        return null;
+    }
+    
+    protected function getDomainFromRecord(Model $record): ?string
+    {
+        $domainField = $this->evaluate($this->domainAttribute) ?? 'domain';
+        $domain = $record->{$domainField} ?? null;
+        
+        if (!$domain) {
+            // Try to get domain from custom fields
+            if (method_exists($record, 'getCustomFieldValue')) {
+                try {
+                    $customFields = $record->customFields()->get();
+                    $domainField = $customFields->where('code', 'domain_name')->first();
+                    if ($domainField) {
+                        $domain = $record->getCustomFieldValue($domainField);
+                    }
+                } catch (\Exception $e) {
+                    // Ignore if custom fields relationship doesn't exist or fails
+                }
+            }
+        }
+        
+        return $domain ? $this->cleanDomain($domain) : null;
+    }
+    
+    protected function isValidFavicon(string $url): bool
+    {
+        try {
+            // Use a simple HTTP HEAD request to check if favicon exists and get size info
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'HEAD',
+                    'timeout' => 3, // 3 second timeout
+                    'user_agent' => 'Mozilla/5.0 (compatible; FaviconChecker/1.0)',
+                ]
+            ]);
+            
+            $headers = @get_headers($url, 1, $context);
+            
+            if (!$headers || strpos($headers[0], '200') === false) {
+                return false;
+            }
+            
+            // Check content type
+            $contentType = $headers['Content-Type'] ?? '';
+            if (is_array($contentType)) {
+                $contentType = $contentType[0];
+            }
+            
+            // Must be an image
+            if (!str_contains($contentType, 'image/')) {
+                return false;
+            }
+            
+            // Check content length (size in bytes)
+            $contentLength = $headers['Content-Length'] ?? 0;
+            if (is_array($contentLength)) {
+                $contentLength = $contentLength[0];
+            }
+            
+            // Reject if too small (likely a placeholder) or too large
+            $minSize = 100; // 100 bytes minimum
+            $maxSize = 50000; // 50KB maximum
+            
+            if ($contentLength < $minSize || $contentLength > $maxSize) {
+                return false;
+            }
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
     protected function getFaviconUrl(Model $record): ?string
     {
         $domainField = $this->evaluate($this->domainAttribute) ?? 'domain';
