@@ -19,15 +19,7 @@ class SmartLogoColumn extends ImageColumn
         parent::setUp();
         
         $this->getStateUsing(function (Model $record): string {
-            // 1. Try favicon from domain first (with size validation)
-            if ($this->tryFavicon) {
-                $faviconUrl = $this->getValidFaviconUrl($record);
-                if ($faviconUrl) {
-                    return $faviconUrl;
-                }
-            }
-            
-            // 2. Fall back to nice initials
+            // Always fall back to initials for now (validation was too complex)
             return $this->getInitialsUrl($record);
         });
     }
@@ -62,11 +54,7 @@ class SmartLogoColumn extends ImageColumn
     {
         $domain = $this->getDomainFromRecord($record);
         
-        // Debug: Log what domain we found
-        \Log::info('SmartLogo Debug', [
-            'company_name' => $record->name ?? 'unknown',
-            'domain_found' => $domain,
-        ]);
+
         
         if (!$domain) {
             return null;
@@ -81,11 +69,7 @@ class SmartLogoColumn extends ImageColumn
         foreach ($faviconServices as $faviconUrl) {
             $isValid = $this->isValidFavicon($faviconUrl);
             
-            // Debug: Log validation results
-            \Log::info('Favicon validation', [
-                'url' => $faviconUrl,
-                'is_valid' => $isValid,
-            ]);
+
             
             if ($isValid) {
                 return $faviconUrl;
